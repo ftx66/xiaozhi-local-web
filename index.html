@@ -1,0 +1,887 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>熊城心 · 本机对话</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --paper: #f3efe6;
+      --ink: #1c1914;
+      --muted: #6b6358;
+      --line: #d8d0c4;
+      --you: #2c4a3e;
+      --bot: #7a2e22;
+      --hold: #7a2e22;
+      --hold-on: #4e1b15;
+    }
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      height: 100%;
+      overflow: hidden;
+      background: var(--paper);
+      color: var(--ink);
+      font-family: "Noto Sans SC", "IBM Plex Sans", sans-serif;
+    }
+    body {
+      display: flex;
+      justify-content: center;
+      height: 100vh;
+      height: 100dvh;
+      padding: 20px 16px 16px;
+    }
+    main {
+      width: min(720px, 100%);
+      height: 100%;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      overflow: hidden;
+    }
+    header, .talk, .hint {
+      flex-shrink: 0;
+    }
+    .title-row {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    header h1 {
+      margin: 0;
+      font-size: 28px;
+      letter-spacing: 0.04em;
+      font-weight: 700;
+    }
+    .power {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-shrink: 0;
+      padding-top: 6px;
+    }
+    .power span {
+      font-size: 13px;
+      color: var(--muted);
+      letter-spacing: 0.06em;
+    }
+    .switch {
+      position: relative;
+      width: 52px;
+      height: 28px;
+      border: 1px solid var(--ink);
+      background: #ddd6ca;
+      cursor: pointer;
+      padding: 0;
+    }
+    .switch i {
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 22px;
+      height: 22px;
+      background: #fffdf8;
+      transition: transform 0.16s ease;
+    }
+    .switch.on {
+      background: var(--you);
+      border-color: var(--you);
+    }
+    .switch.on i {
+      transform: translateX(24px);
+      background: #f6f1e8;
+    }
+    .switch:disabled {
+      cursor: not-allowed;
+      opacity: 0.55;
+    }
+    header p {
+      margin: 6px 0 0;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.6;
+    }
+    .agent-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 12px;
+      flex-wrap: wrap;
+    }
+    .agent-bar label {
+      font-size: 13px;
+      color: var(--muted);
+      letter-spacing: 0.06em;
+    }
+    .agent-bar select,
+    .agent-bar input,
+    .agent-bar button {
+      border: 1px solid var(--ink);
+      background: #fffdf8;
+      color: var(--ink);
+      font: inherit;
+      font-size: 14px;
+      padding: 6px 10px;
+    }
+    .agent-bar select {
+      min-width: 180px;
+      max-width: 240px;
+    }
+    .agent-bar button {
+      cursor: pointer;
+      background: transparent;
+    }
+    .agent-bar button.primary {
+      background: var(--ink);
+      color: var(--paper);
+    }
+    .agent-bar button:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+    .add-form {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 8px;
+    }
+    .add-form input {
+      flex: 1;
+      min-width: 180px;
+      border: 1px solid var(--ink);
+      background: #fffdf8;
+      color: var(--ink);
+      font: inherit;
+      font-size: 14px;
+      padding: 6px 10px;
+    }
+    .bind-banner {
+      border: 1px solid var(--line);
+      background: #fffdf8;
+      padding: 12px 14px;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+    .bind-banner .code {
+      display: block;
+      margin: 6px 0 8px;
+      font-size: 28px;
+      letter-spacing: 0.18em;
+      font-weight: 700;
+    }
+    .bind-banner button {
+      border: 1px solid var(--ink);
+      background: var(--ink);
+      color: var(--paper);
+      font: inherit;
+      font-size: 13px;
+      padding: 6px 12px;
+      cursor: pointer;
+      margin-right: 8px;
+      margin-top: 6px;
+    }
+    .bind-banner button.ghost {
+      background: transparent;
+      color: var(--ink);
+    }
+    .msg.sys {
+      max-width: 100%;
+      margin: 4px 0 12px;
+      padding: 0;
+      text-align: center;
+      color: var(--muted);
+      font-size: 12px;
+      letter-spacing: 0.06em;
+      background: transparent;
+    }
+    .status {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      color: var(--muted);
+    }
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #b9a48a;
+    }
+    .dot.ok { background: #2c4a3e; }
+    .dot.busy { background: var(--bot); }
+    .dot.err { background: #8a1f1f; }
+    #log {
+      flex: 1 1 auto;
+      min-height: 0;
+      border-top: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+      padding: 16px 2px;
+      overflow-y: auto;
+      overscroll-behavior: contain;
+    }
+    .msg {
+      max-width: 88%;
+      margin: 0 0 12px;
+      padding: 10px 12px;
+      font-size: 15px;
+      line-height: 1.65;
+      white-space: pre-wrap;
+    }
+    .msg.you {
+      margin-left: auto;
+      background: var(--you);
+      color: #f6f1e8;
+    }
+    .msg.bot {
+      background: #fffdf8;
+      border: 1px solid var(--line);
+    }
+    .msg .who {
+      display: block;
+      font-size: 11px;
+      letter-spacing: 0.08em;
+      margin-bottom: 4px;
+      opacity: 0.72;
+    }
+    .talk {
+      display: grid;
+      grid-template-columns: 168px 1fr;
+      gap: 14px;
+      align-items: stretch;
+    }
+    #hold {
+      height: 168px;
+      border: 0;
+      background: var(--hold);
+      color: #f6f1e8;
+      font: inherit;
+      font-size: 18px;
+      font-weight: 600;
+      cursor: pointer;
+      user-select: none;
+      -webkit-user-select: none;
+      touch-action: none;
+    }
+    #hold:hover { filter: brightness(1.05); }
+    #hold.active {
+      background: var(--hold-on);
+      transform: translateY(1px);
+    }
+    #hold:disabled {
+      background: #b8aea2;
+      cursor: not-allowed;
+    }
+    .composer {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    textarea {
+      flex: 1;
+      min-height: 110px;
+      resize: none;
+      border: 1px solid var(--line);
+      background: #fffdf8;
+      color: var(--ink);
+      font: inherit;
+      font-size: 15px;
+      padding: 10px 12px;
+      outline: none;
+    }
+    textarea:focus { border-color: var(--ink); }
+    .row {
+      display: flex;
+      gap: 8px;
+    }
+    .row button {
+      border: 1px solid var(--ink);
+      background: transparent;
+      color: var(--ink);
+      font: inherit;
+      font-size: 14px;
+      padding: 8px 14px;
+      cursor: pointer;
+    }
+    .row button.primary {
+      background: var(--ink);
+      color: var(--paper);
+    }
+    .row button:disabled,
+    textarea:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+    .hint {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.55;
+    }
+    @media (max-width: 640px) {
+      .talk { grid-template-columns: 1fr; }
+      #hold { height: 120px; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <div class="title-row">
+        <h1>熊城心 · 本机对话</h1>
+        <label class="power">
+          <span id="powerLabel">小智关</span>
+          <button class="switch" id="power" type="button" role="switch" aria-checked="false" aria-label="开关小智">
+            <i></i>
+          </button>
+        </label>
+      </div>
+      <p>第一次先点「添加」，把验证码绑到自己的 xiaozhi.me 智能体。接通后，按住左边按钮说话，或在右边打字。</p>
+      <div class="agent-bar">
+        <label for="agent">智能体</label>
+        <select id="agent"></select>
+        <button type="button" id="addAgent">添加</button>
+        <button type="button" id="renameAgent">改名</button>
+        <button type="button" id="removeAgent">移除</button>
+      </div>
+      <div class="add-form" id="addForm" hidden>
+        <input id="newName" maxlength="40" placeholder="例如：会议向导、校园支持" />
+        <button class="primary" type="button" id="createAgent">创建并取验证码</button>
+        <button type="button" id="cancelAdd">取消</button>
+      </div>
+      <div class="status"><span class="dot" id="dot"></span><span id="status">小智已关闭</span></div>
+    </header>
+    <div class="bind-banner" id="bindBanner" hidden>
+      <div>把下面这个验证码填进 <a href="https://xiaozhi.me/console/" target="_blank" rel="noreferrer">xiaozhi.me</a> → 目标智能体 → 添加设备。本页已经带上序列号并在后台握手，不用烧录开发板。填完后点下面按钮，或等几秒自动检查。</div>
+      <span class="code" id="bindCode">------</span>
+      <button type="button" id="checkBind">我已绑定，检查一下</button>
+      <button type="button" id="reissueBind" class="ghost">验证码无效，重新取码</button>
+    </div>
+    <div id="log"></div>
+    <section class="talk">
+      <button id="hold" type="button" disabled>按住说话</button>
+      <div class="composer">
+        <textarea id="text" placeholder="输入文字，回车发送。Shift+回车换行。"></textarea>
+        <div class="row">
+          <button class="primary" id="send" type="button">发送</button>
+          <button id="abort" type="button">打断</button>
+        </div>
+      </div>
+    </section>
+    <p class="hint">官方云一台设备只能绑一个智能体，所以这里每个智能体对应一台本机虚拟设备。关掉开关会断开官方连接。麦克风权限选允许。接通后按住空格也可以说话。</p>
+  </main>
+  <script>
+    const statusEl = document.getElementById("status");
+    const dotEl = document.getElementById("dot");
+    const logEl = document.getElementById("log");
+    const holdEl = document.getElementById("hold");
+    const textEl = document.getElementById("text");
+    const sendEl = document.getElementById("send");
+    const abortEl = document.getElementById("abort");
+    const powerEl = document.getElementById("power");
+    const powerLabel = document.getElementById("powerLabel");
+    const agentEl = document.getElementById("agent");
+    const addAgentEl = document.getElementById("addAgent");
+    const renameAgentEl = document.getElementById("renameAgent");
+    const removeAgentEl = document.getElementById("removeAgent");
+    const addFormEl = document.getElementById("addForm");
+    const newNameEl = document.getElementById("newName");
+    const createAgentEl = document.getElementById("createAgent");
+    const cancelAddEl = document.getElementById("cancelAdd");
+    const bindBannerEl = document.getElementById("bindBanner");
+    const bindCodeEl = document.getElementById("bindCode");
+    const checkBindEl = document.getElementById("checkBind");
+    const reissueBindEl = document.getElementById("reissueBind");
+
+    let ws = null;
+    let playRate = 24000;
+    let playCtx = null;
+    let nextPlay = 0;
+    let capturing = false;
+    let capture = null;
+    let pendingUser = "";
+    let wantedOn = localStorage.getItem("xiaozhi-power") !== "0";
+    let xiaozhiOn = false;
+    let reconnectTimer = null;
+    let agents = [];
+    let currentAgentId = "";
+    let currentAgentName = "熊城心";
+    let bindPoll = null;
+    let switching = false;
+
+    function setStatus(text, kind) {
+      statusEl.textContent = text;
+      dotEl.className = "dot" + (kind ? " " + kind : "");
+    }
+
+    function addMsg(role, who, text) {
+      const box = document.createElement("div");
+      box.className = "msg " + role;
+      if (role !== "sys") {
+        const label = document.createElement("span");
+        label.className = "who";
+        label.textContent = who;
+        box.appendChild(label);
+      }
+      box.appendChild(document.createTextNode(text));
+      logEl.appendChild(box);
+      logEl.scrollTop = logEl.scrollHeight;
+    }
+
+    function currentAgent() {
+      return agents.find((item) => item.id === currentAgentId) || null;
+    }
+
+    function renderAgents() {
+      const prev = agentEl.value;
+      agentEl.innerHTML = "";
+      agents.forEach((item) => {
+        const opt = document.createElement("option");
+        opt.value = item.id;
+        opt.textContent = item.bound ? item.name : item.name + "（待绑定）";
+        agentEl.appendChild(opt);
+      });
+      if (currentAgentId) agentEl.value = currentAgentId;
+      else if (prev && agents.some((item) => item.id === prev)) agentEl.value = prev;
+      removeAgentEl.disabled = !currentAgent();
+      renameAgentEl.disabled = !currentAgent();
+    }
+
+    function applyAgentPayload(data) {
+      if (Array.isArray(data.agents)) agents = data.agents;
+      if (data.agentId) currentAgentId = data.agentId;
+      if (data.currentId) currentAgentId = data.currentId;
+      if (data.agentName) currentAgentName = data.agentName;
+      renderAgents();
+      const selected = currentAgent();
+      if (selected && !selected.bound) {
+        bindBannerEl.hidden = false;
+        bindCodeEl.textContent = selected.activationCode || data.activationCode || "------";
+        startBindPoll();
+      } else {
+        bindBannerEl.hidden = true;
+        stopBindPoll();
+      }
+    }
+
+    function startBindPoll() {
+      if (bindPoll) return;
+      bindPoll = setInterval(() => {
+        if (ws && ws.readyState === WebSocket.OPEN) {
+          ws.send(JSON.stringify({ type: "refresh_agent" }));
+        }
+      }, 4000);
+    }
+
+    function stopBindPoll() {
+      if (!bindPoll) return;
+      clearInterval(bindPoll);
+      bindPoll = null;
+    }
+
+    async function api(path, options) {
+      const resp = await fetch(path, Object.assign({
+        headers: { "Content-Type": "application/json" },
+      }, options));
+      const data = await resp.json();
+      if (!resp.ok) throw new Error(data.error || "请求失败");
+      return data;
+    }
+
+    function ensurePlayCtx() {
+      if (!playCtx) playCtx = new AudioContext({ sampleRate: playRate });
+      if (playCtx.state === "suspended") playCtx.resume();
+      return playCtx;
+    }
+
+    function playPcm16(bytes) {
+      const ctx = ensurePlayCtx();
+      const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+      const count = Math.floor(bytes.byteLength / 2);
+      const f32 = new Float32Array(count);
+      for (let i = 0; i < count; i++) f32[i] = view.getInt16(i * 2, true) / 32768;
+      const buffer = ctx.createBuffer(1, f32.length, playRate);
+      buffer.getChannelData(0).set(f32);
+      const src = ctx.createBufferSource();
+      src.buffer = buffer;
+      src.connect(ctx.destination);
+      const now = ctx.currentTime;
+      if (nextPlay < now + 0.02) nextPlay = now + 0.02;
+      src.start(nextPlay);
+      nextPlay += buffer.duration;
+    }
+
+    function resampleTo16k(float32, fromRate) {
+      if (fromRate === 16000) return float32;
+      const ratio = fromRate / 16000;
+      const outLen = Math.max(1, Math.round(float32.length / ratio));
+      const out = new Float32Array(outLen);
+      for (let i = 0; i < outLen; i++) {
+        const src = i * ratio;
+        const i0 = Math.floor(src);
+        const i1 = Math.min(i0 + 1, float32.length - 1);
+        const t = src - i0;
+        out[i] = float32[i0] * (1 - t) + float32[i1] * t;
+      }
+      return out;
+    }
+
+    function floatToInt16Bytes(float32) {
+      const buf = new ArrayBuffer(float32.length * 2);
+      const view = new DataView(buf);
+      for (let i = 0; i < float32.length; i++) {
+        const s = Math.max(-1, Math.min(1, float32[i]));
+        view.setInt16(i * 2, s < 0 ? s * 0x8000 : s * 0x7fff, true);
+      }
+      return buf;
+    }
+
+    async function startCapture() {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: { echoCancellation: true, noiseSuppression: true, channelCount: 1 },
+        video: false,
+      });
+      const ctx = new AudioContext();
+      const source = ctx.createMediaStreamSource(stream);
+      const node = ctx.createScriptProcessor(4096, 1, 1);
+      node.onaudioprocess = (ev) => {
+        if (!capturing || !ws || ws.readyState !== WebSocket.OPEN) return;
+        const input = ev.inputBuffer.getChannelData(0);
+        const resampled = resampleTo16k(input, ctx.sampleRate);
+        ws.send(floatToInt16Bytes(resampled));
+      };
+      const mute = ctx.createGain();
+      mute.gain.value = 0;
+      source.connect(node);
+      node.connect(mute);
+      mute.connect(ctx.destination);
+      return {
+        stop() {
+          node.disconnect();
+          source.disconnect();
+          stream.getTracks().forEach((t) => t.stop());
+          ctx.close();
+        },
+      };
+    }
+
+    function setControls(on) {
+      holdEl.disabled = !on;
+      sendEl.disabled = !on;
+      abortEl.disabled = !on;
+      textEl.disabled = !on;
+    }
+
+    function renderPower() {
+      powerEl.classList.toggle("on", wantedOn);
+      powerEl.setAttribute("aria-checked", wantedOn ? "true" : "false");
+      powerLabel.textContent = wantedOn ? "小智开" : "小智关";
+    }
+
+    function stopTalk() {
+      if (!capturing) return;
+      capturing = false;
+      holdEl.classList.remove("active");
+      holdEl.textContent = "按住说话";
+      if (capture) {
+        capture.stop();
+        capture = null;
+      }
+    }
+
+    function applyPower(on) {
+      wantedOn = on;
+      localStorage.setItem("xiaozhi-power", on ? "1" : "0");
+      renderPower();
+      if (!ws || ws.readyState !== WebSocket.OPEN) {
+        if (on) connect();
+        else {
+          xiaozhiOn = false;
+          setControls(false);
+          setStatus("小智已关闭", "");
+        }
+        return;
+      }
+      if (on) {
+        setStatus("正在接通小智…", "");
+        ws.send(JSON.stringify({ type: "power", on: true }));
+      } else {
+        stopTalk();
+        nextPlay = 0;
+        xiaozhiOn = false;
+        setControls(false);
+        ws.send(JSON.stringify({ type: "power", on: false }));
+        setStatus("小智已关闭", "");
+      }
+    }
+
+    async function beginTalk(ev) {
+      ev.preventDefault();
+      if (!xiaozhiOn || capturing || !ws || ws.readyState !== WebSocket.OPEN) return;
+      capturing = true;
+      holdEl.classList.add("active");
+      holdEl.textContent = "松开发送";
+      setStatus("正在听…", "busy");
+      nextPlay = 0;
+      try {
+        ensurePlayCtx();
+        ws.send(JSON.stringify({ type: "listen", state: "start" }));
+        capture = await startCapture();
+      } catch (err) {
+        capturing = false;
+        holdEl.classList.remove("active");
+        holdEl.textContent = "按住说话";
+        setStatus("麦克风不可用：" + err.message, "err");
+      }
+    }
+
+    function endTalk(ev) {
+      if (ev) ev.preventDefault();
+      if (!capturing) return;
+      capturing = false;
+      holdEl.classList.remove("active");
+      holdEl.textContent = "按住说话";
+      if (capture) {
+        capture.stop();
+        capture = null;
+      }
+      if (ws && ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({ type: "listen", state: "stop" }));
+      }
+      setStatus("识别中…", "busy");
+    }
+
+    function sendText() {
+      const text = textEl.value.trim();
+      if (!xiaozhiOn || !text || !ws || ws.readyState !== WebSocket.OPEN) return;
+      pendingUser = text;
+      addMsg("you", "你", text);
+      textEl.value = "";
+      ws.send(JSON.stringify({ type: "text", text }));
+      setStatus("已发送文字", "busy");
+    }
+
+    function connect() {
+      if (ws && (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING)) return;
+      const proto = location.protocol === "https:" ? "wss" : "ws";
+      ws = new WebSocket(proto + "://" + location.host + "/ws");
+      ws.binaryType = "arraybuffer";
+      ws.onopen = () => {
+        setStatus(wantedOn ? "本机已连接，正在接通小智…" : "本机已连接，小智关闭中", "");
+        if (wantedOn) ws.send(JSON.stringify({ type: "power", on: true }));
+      };
+      ws.onclose = () => {
+        xiaozhiOn = false;
+        setControls(false);
+        ws = null;
+        if (reconnectTimer) clearTimeout(reconnectTimer);
+        setStatus("本机连接已断开，1.5 秒后重连", "err");
+        reconnectTimer = setTimeout(connect, 1500);
+      };
+      ws.onerror = () => setStatus("连接出错。若桌面小智还开着，先关掉它。", "err");
+      ws.onmessage = (ev) => {
+        if (ev.data instanceof ArrayBuffer) {
+          if (!xiaozhiOn) return;
+          playPcm16(new Uint8Array(ev.data));
+          return;
+        }
+        let data;
+        try { data = JSON.parse(ev.data); } catch { return; }
+        if (data.type === "status") {
+          applyAgentPayload(data);
+          if (switching && data.agentName) {
+            addMsg("sys", "", "已切换到 " + data.agentName);
+            switching = false;
+          }
+          if (data.state === "ready") {
+            playRate = data.playSampleRate || 24000;
+            xiaozhiOn = true;
+            wantedOn = true;
+            renderPower();
+            setControls(true);
+            setStatus("已接通「" + (data.agentName || currentAgentName) + "」", "ok");
+          } else if (data.state === "need_bind") {
+            xiaozhiOn = false;
+            setControls(false);
+            setStatus("先把验证码绑到「" + (data.agentName || currentAgentName) + "」", "busy");
+          } else if (data.state === "empty") {
+            xiaozhiOn = false;
+            setControls(false);
+            setStatus("还没有智能体。先点「添加」，再用验证码绑定。", "");
+          } else if (data.state === "off") {
+            xiaozhiOn = false;
+            setControls(false);
+            if (!wantedOn) setStatus("小智已关闭", "");
+          } else if (data.state === "listening") {
+            setStatus("正在听…", "busy");
+          } else if (data.state === "idle") {
+            setStatus(xiaozhiOn ? "待命" : "小智已关闭", xiaozhiOn ? "ok" : "");
+          } else if (data.state === "upstream_closed") {
+            setStatus("待命，下一句会自动接上", "ok");
+          }
+        } else if (data.type === "pong") {
+          /* keepalive */
+        } else if (data.type === "error") {
+          setStatus(data.message, "err");
+        } else if (data.type === "stt" && data.text) {
+          if (data.text !== pendingUser) addMsg("you", "你", data.text);
+          pendingUser = "";
+        } else if (data.type === "tts" && data.state === "sentence_start" && data.text) {
+          addMsg("bot", currentAgentName || "熊城心", data.text);
+          setStatus("正在回答", "busy");
+        } else if (data.type === "tts" && data.state === "stop") {
+          setStatus(xiaozhiOn ? "待命" : "小智已关闭", xiaozhiOn ? "ok" : "");
+        }
+      };
+    }
+
+    holdEl.addEventListener("pointerdown", beginTalk);
+    holdEl.addEventListener("pointerup", endTalk);
+    holdEl.addEventListener("pointercancel", endTalk);
+    holdEl.addEventListener("pointerleave", (ev) => { if (capturing) endTalk(ev); });
+    window.addEventListener("pointerup", (ev) => { if (capturing) endTalk(ev); });
+
+    window.addEventListener("keydown", (ev) => {
+      if (ev.code === "Space" && ev.target === document.body) {
+        ev.preventDefault();
+        if (xiaozhiOn && !capturing) beginTalk(ev);
+      }
+    });
+    window.addEventListener("keyup", (ev) => {
+      if (ev.code === "Space") endTalk(ev);
+    });
+
+    function requestSwitch(id, force) {
+      if (!id || (!force && id === currentAgentId)) return;
+      switching = true;
+      stopTalk();
+      nextPlay = 0;
+      xiaozhiOn = false;
+      setControls(false);
+      if (ws && ws.readyState === WebSocket.OPEN) {
+        setStatus("正在切换智能体…", "");
+        ws.send(JSON.stringify({ type: "switch", id }));
+      }
+    }
+
+    agentEl.addEventListener("change", () => requestSwitch(agentEl.value));
+    addAgentEl.addEventListener("click", () => {
+      addFormEl.hidden = false;
+      newNameEl.focus();
+    });
+    cancelAddEl.addEventListener("click", () => {
+      addFormEl.hidden = true;
+      newNameEl.value = "";
+    });
+    createAgentEl.addEventListener("click", async () => {
+      const name = newNameEl.value.trim();
+      if (!name) {
+        setStatus("先写智能体名称", "err");
+        return;
+      }
+      createAgentEl.disabled = true;
+      try {
+        const data = await api("/api/agents", {
+          method: "POST",
+          body: JSON.stringify({ name }),
+        });
+        applyAgentPayload(data);
+        addFormEl.hidden = true;
+        newNameEl.value = "";
+        requestSwitch(data.currentId || data.agentId, true);
+      } catch (err) {
+        setStatus(err.message, "err");
+      } finally {
+        createAgentEl.disabled = false;
+      }
+    });
+    newNameEl.addEventListener("keydown", (ev) => {
+      if (ev.key === "Enter") {
+        ev.preventDefault();
+        createAgentEl.click();
+      }
+    });
+    renameAgentEl.addEventListener("click", async () => {
+      const selected = currentAgent();
+      if (!selected) return;
+      const name = window.prompt("智能体名称", selected.name);
+      if (!name || name.trim() === selected.name) return;
+      try {
+        const data = await api("/api/agents/" + selected.id, {
+          method: "PATCH",
+          body: JSON.stringify({ name: name.trim() }),
+        });
+        applyAgentPayload(data);
+      } catch (err) {
+        setStatus(err.message, "err");
+      }
+    });
+    removeAgentEl.addEventListener("click", async () => {
+      const selected = currentAgent();
+      if (!selected) return;
+      if (!window.confirm("从本机列表移除「" + selected.name + "」？不会在 xiaozhi.me 解绑。")) return;
+      try {
+        const data = await api("/api/agents/" + selected.id, { method: "DELETE" });
+        applyAgentPayload(data);
+        if (data.currentId) requestSwitch(data.currentId, true);
+        else {
+          xiaozhiOn = false;
+          setControls(false);
+          setStatus("还没有智能体。先点「添加」，再用验证码绑定。", "");
+        }
+      } catch (err) {
+        setStatus(err.message, "err");
+      }
+    });
+    checkBindEl.addEventListener("click", () => {
+      if (ws && ws.readyState === WebSocket.OPEN) {
+        setStatus("正在检查绑定…", "");
+        ws.send(JSON.stringify({ type: "refresh_agent" }));
+      }
+    });
+    reissueBindEl.addEventListener("click", async () => {
+      const selected = currentAgent();
+      if (!selected) return;
+      reissueBindEl.disabled = true;
+      try {
+        const data = await api("/api/agents/" + selected.id + "/reissue", { method: "POST" });
+        applyAgentPayload(data);
+        requestSwitch(data.currentId || data.agentId, true);
+        setStatus("已换新验证码，请用最新的一串", "busy");
+      } catch (err) {
+        setStatus(err.message, "err");
+      } finally {
+        reissueBindEl.disabled = false;
+      }
+    });
+    powerEl.addEventListener("click", () => applyPower(!wantedOn));
+    sendEl.addEventListener("click", sendText);
+    abortEl.addEventListener("click", () => {
+      if (!xiaozhiOn || !ws || ws.readyState !== WebSocket.OPEN) return;
+      ws.send(JSON.stringify({ type: "abort" }));
+      nextPlay = 0;
+    });
+    textEl.addEventListener("keydown", (ev) => {
+      if (ev.key === "Enter" && !ev.shiftKey) {
+        ev.preventDefault();
+        sendText();
+      }
+    });
+
+    setInterval(() => {
+      if (ws && ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({ type: "ping" }));
+      }
+    }, 20000);
+
+    renderPower();
+    setControls(false);
+    api("/api/agents").then(applyAgentPayload).catch((err) => setStatus(err.message, "err"));
+    connect();
+  </script>
+</body>
+</html>
